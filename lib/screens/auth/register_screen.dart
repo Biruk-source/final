@@ -4,9 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pinput/pinput.dart';
+import 'package:provider/provider.dart';
 
 import '../../services/auth_service.dart'; // Adjust path
 import '../../services/app_string.dart'; // Adjust path
+import '../../providers/locale_provider.dart';
+import '../../providers/theme_provider.dart';
 // Adjust path
 
 // Route constants
@@ -32,7 +35,8 @@ class _RegisterScreenState extends State<RegisterScreen>
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _phoneController =
+      TextEditingController(text: "+251");
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
   final TextEditingController _professionController = TextEditingController();
@@ -89,11 +93,6 @@ class _RegisterScreenState extends State<RegisterScreen>
     return localRegex.hasMatch(phoneNumber.trim());
   }
 
-  // =======================================================================
-  // ---        CORE LOGIC & HELPER METHODS (DEFINED BEFORE BUILD)      ---
-  // =======================================================================
-
-  // --- Snackbar Helpers (Fully Implemented) ---
   void _showSuccessSnackbar(String message) {
     if (!mounted) return;
     final theme = Theme.of(context);
@@ -519,6 +518,7 @@ class _RegisterScreenState extends State<RegisterScreen>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final appStrings = AppLocalizations.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     if (appStrings == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -541,23 +541,58 @@ class _RegisterScreenState extends State<RegisterScreen>
       case VerificationState.form:
       default:
         appBarTitle = appStrings.registerTitle;
-        bodyContent = _buildRegistrationForm(theme, appStrings);
+        bodyContent =
+            _buildRegistrationForm(theme, colorScheme, isDarkMode, appStrings);
         appBarActions = null;
         break;
     }
 
     // Build the Scaffold
     return Scaffold(
-        backgroundColor: colorScheme.surfaceContainerLowest,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-            title: Text(appBarTitle),
             backgroundColor: Colors.transparent,
             elevation: 0,
             foregroundColor: colorScheme.onSurface,
             leading: _currentPhase == VerificationState.form
                 ? BackButton(color: colorScheme.onSurface)
                 : null,
-            actions: appBarActions),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  isDarkMode ? Icons.wb_sunny_outlined : Icons.nightlight_round,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                tooltip: isDarkMode
+                    ? appStrings.themeTooltipLight
+                    : appStrings.themeTooltipDark,
+                onPressed: () {
+                  try {
+                    Provider.of<ThemeProvider>(context, listen: false)
+                        .toggleTheme();
+                  } catch (e) {
+                    print("Error accessing ThemeProvider: $e");
+                  }
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.language, color: colorScheme.onSurfaceVariant),
+                tooltip: appStrings.languageToggleTooltip,
+                onPressed: () {
+                  try {
+                    final localeProvider =
+                        Provider.of<LocaleProvider>(context, listen: false);
+                    final nextLocale =
+                        localeProvider.locale.languageCode == 'en'
+                            ? const Locale('am')
+                            : const Locale('en');
+                    localeProvider.setLocale(nextLocale);
+                  } catch (e) {
+                    print("Error getting LocaleProvider: $e");
+                  }
+                },
+              ),
+            ]),
         body: SafeArea(
             child: Center(
                 child: SingleChildScrollView(
@@ -621,7 +656,7 @@ class _RegisterScreenState extends State<RegisterScreen>
             selectedBorderColor: theme.colorScheme.primary,
             selectedColor: theme.colorScheme.onPrimary,
             fillColor: theme.colorScheme.primary,
-            color: theme.colorScheme.primary,
+            color: theme.colorScheme.onPrimaryContainer,
             borderColor: theme.colorScheme.outlineVariant,
             borderWidth: 1,
             constraints: BoxConstraints.expand(
@@ -651,6 +686,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   // --- Client/Worker Toggle Buttons ---
+
   Widget _buildUserTypeSelector(ThemeData theme, AppStrings appStrings) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Padding(
@@ -697,8 +733,8 @@ class _RegisterScreenState extends State<RegisterScreen>
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
             decoration: BoxDecoration(
               color: isSelected
-                  ? theme.colorScheme.primaryContainer
-                  : theme.colorScheme.surfaceContainerHigh,
+                  ? Color.fromARGB(56, 6, 6, 149)
+                  : Color.fromARGB(0, 195, 174, 174),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                   color: isSelected
@@ -732,7 +768,6 @@ class _RegisterScreenState extends State<RegisterScreen>
             ])));
   }
 
-  // --- Input Field Builder ---
   Widget _buildInputField(
       {required AppStrings appStrings,
       required String label,
@@ -790,7 +825,8 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   // --- Registration Form Builder ---
-  Widget _buildRegistrationForm(ThemeData theme, AppStrings appStrings) {
+  Widget _buildRegistrationForm(
+      ThemeData theme, colorScheme, isDarkMode, AppStrings appStrings) {
     return Form(
         key: _formKey,
         child: Column(key: const ValueKey('registration_form'), children: [
@@ -876,6 +912,64 @@ class _RegisterScreenState extends State<RegisterScreen>
                   }
                   if (!_isValidEthiopianPhoneNumber(v.trim())) {
                     return "Use 9 digits (e.g., 911...)";
+                  }
+                  return null;
+                }),
+            const SizedBox(height: 16),
+            _buildInputField(
+                appStrings: appStrings,
+                label: appStrings.loginPasswordLabel,
+                hint: appStrings.loginPasswordHint,
+                icon: Icons.lock_outline_rounded,
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                onToggleVisibility: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return appStrings
+                        .errorFieldRequired(appStrings.loginPasswordLabel);
+                  }
+                  if (v.length < 6) return appStrings.errorPasswordShort;
+                  return null;
+                }),
+            const SizedBox(height: 16),
+            _buildInputField(
+                appStrings: appStrings,
+                label: appStrings.registerConfirmPasswordLabel,
+                hint: appStrings.registerConfirmPasswordHint,
+                icon: Icons.lock_person_outlined,
+                controller: _confirmController,
+                obscureText: _obscureConfirm,
+                onToggleVisibility: () =>
+                    setState(() => _obscureConfirm = !_obscureConfirm),
+                validator: (v) {
+                  if (v == null || v.isEmpty) {
+                    return appStrings.errorFieldRequired(
+                        appStrings.registerConfirmPasswordLabel);
+                  }
+                  if (v != _passwordController.text) {
+                    return appStrings.registerErrorPasswordMismatch;
+                  }
+                  return null;
+                })
+          ],
+          if (_selectedMethod == RegistrationMethod.phone) ...[
+            _buildInputField(
+                appStrings: appStrings,
+                label: appStrings.loginEmailLabel,
+                hint: appStrings.loginEmailHint,
+                icon: Icons.alternate_email_rounded,
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) {
+                    return appStrings
+                        .errorFieldRequired(appStrings.loginEmailLabel);
+                  }
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                      .hasMatch(v.trim())) {
+                    return appStrings.registerErrorInvalidEmailRegister;
                   }
                   return null;
                 }),
@@ -1201,4 +1295,4 @@ class _RegisterScreenState extends State<RegisterScreen>
                         ..onTap = () => Navigator.pop(context))
                 ]))));
   }
-} // <<< END OF _RegisterScreenState >>>
+}

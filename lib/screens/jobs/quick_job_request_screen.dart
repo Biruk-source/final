@@ -109,7 +109,7 @@ class _QuickJobRequestScreenState extends State<QuickJobRequestScreen> {
       if (jobId == null) {
         setState(() {
           _errorMessage =
-              "❌ Pro's booked, fam!\n🚫 Try another day!\n📅 Pick a new vibe!";
+              "❌ Unfortunately, \n 🚫 the pro is unavailable on this date. 📅 Please choose another.";
           _isLoading = false;
         });
         return;

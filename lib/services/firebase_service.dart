@@ -16,19 +16,14 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-// FIX: This should be a final variable, not a method with ()
-// FIX: You only need one Supabase client instance
   final SupabaseClient _supabaseClient = Supabase.instance.client;
 
   String? get currentUserId => _auth.currentUser?.uid;
 
-  // Initialize Firebase
   static Future<void> initialize() async {
     await Firebase.initializeApp();
   }
 
-  /// Logs a transaction to Firestore
   Future<void> logTransaction(Map<String, dynamic> data) async {
     await _firestore
         .collection('transactions')
@@ -2506,6 +2501,7 @@ class FirebaseService {
     required String paymentMethod,
     required String status,
     required String transactionId,
+    required String workerID,
   }) async {
     try {
       final User? user = _auth.currentUser;
@@ -2520,6 +2516,39 @@ class FirebaseService {
         'timestamp': FieldValue.serverTimestamp(),
         'transactionId': transactionId,
       });
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('transactions')
+          .add({
+        'jobId': jobId,
+        'amount': amount,
+        'paymentMethod': paymentMethod,
+        'status': status,
+        'timestamp': FieldValue.serverTimestamp(),
+        'transactionId': transactionId,
+      });
+      await _firestore.collection('users').doc(user.uid).set({
+        'completedJobs': FieldValue.increment(1),
+      }, SetOptions(merge: true));
+
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('jobs')
+          .doc(jobId)
+          .update({
+        'status': 'paycompleted',
+      });
+      await _firestore
+          .collection('professionals')
+          .doc(workerID)
+          .collection('jobs')
+          .doc(jobId)
+          .update({
+        'status': 'paycompleted',
+      });
+      print('Incremented completedJobs for user ${user.uid}');
     } catch (e) {
       print('Error creating payment record: $e');
       rethrow;

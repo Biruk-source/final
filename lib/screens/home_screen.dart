@@ -30,6 +30,7 @@ import 'jobs/job_detail_screen.dart';
 import 'notifications_screen.dart';
 import 'job_history_screen.dart';
 import 'professional_setup_screen.dart';
+import '../services/ai_chat_service.dart';
 
 // ============================================================
 //               HomeScreen Widget - FULL POWER!
@@ -111,6 +112,8 @@ class _HomeScreenState extends State<HomeScreen>
   // For "help me search" feature
   Timer? _aiSuggestionDebounce;
   bool _showAiSearchSuggestion = false;
+  AiChatService? _aiChatService;
+  bool _isAiServiceInitialized = false;
 
   // Dark Mode Specific Gradients (Expanded)
   static const List<List<Color>> _gentleAnimatedBgGradientsDark = [
@@ -555,6 +558,7 @@ class _HomeScreenState extends State<HomeScreen>
         _availableCategories = sortedCategories;
         _applyWorkerFilters();
       });
+      await _initializeAiService();
     } catch (e, s) {
       print("DEBUG: Error loading workers: $e\n$s");
       if (mounted) {
@@ -569,6 +573,19 @@ class _HomeScreenState extends State<HomeScreen>
         _filteredWorkers = [];
       });
     }
+  }
+
+  Future<void> _initializeAiService() async {
+    print("HomeScreen: Initializing PERSONALIZED AI Service...");
+    _aiChatService = AiChatService();
+
+    // Call the new, more powerful initialization method
+    await _aiChatService!.initializePersonalizedChat();
+
+    setState(() {
+      _isAiServiceInitialized = true; // AI is ready!
+    });
+    print("HomeScreen: PERSONALIZED AI Service is now ready.");
   }
 
   Future<void> _loadJobs() async {
@@ -799,23 +816,25 @@ class _HomeScreenState extends State<HomeScreen>
           // The AI Chat Floating Button
           _buildChatToggleButton(colorScheme),
 
-          // The Sliding AI Chat Panel
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOutCubic,
-            top: 80, // Position below the AppBar
-            right: _isChatPanelVisible ? 0 : -385, // -380 (width) - 5 (padding)
-            child: AiChatPanel(
-              key: ValueKey(_searchQueryForAi), // Force rebuild with new prompt
-              initialPrompt: _searchQueryForAi,
-              onClose: () {
-                setState(() {
-                  _isChatPanelVisible = false;
-                  _searchQueryForAi = ''; // Clear prompt when closed manually
-                });
-              },
+          if (_isAiServiceInitialized) // This check is important!
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOutCubic,
+              top: 120,
+              bottom: 90,
+              right: _isChatPanelVisible ? 0 : -405,
+              child: AiChatPanel(
+                // --- THIS IS THE FIX ---
+                // Give the panel the fully prepared AI service
+                aiChatService: _aiChatService!,
+                // ---------------------
+                onClose: () {
+                  setState(() {
+                    _isChatPanelVisible = false;
+                  });
+                },
+              ),
             ),
-          ),
 
           // --- END OF NEW OVERLAYS ---
         ],
@@ -827,21 +846,23 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildChatToggleButton(ColorScheme colorScheme) {
     return Positioned(
-      top: 100, // Adjust as needed
+      top: 180, // Adjust as needed
       right: 16,
       child: ScaleTransition(
         scale: _fabAnimationController, // Re-use existing FAB animation
         child: FloatingActionButton(
           mini: true, // Make it a bit smaller
-          onPressed: () {
-            setState(() {
-              _isChatPanelVisible = !_isChatPanelVisible;
-              _searchQueryForAi =
-                  ''; // Always clear previous search on manual toggle
-            });
-          },
+          onPressed: !_isAiServiceInitialized
+              ? null
+              : () {
+                  setState(() {
+                    _isChatPanelVisible = !_isChatPanelVisible;
+                  });
+                },
+          backgroundColor:
+              !_isAiServiceInitialized ? Colors.grey : colorScheme.secondary,
           tooltip: "AI Assistant",
-          backgroundColor: colorScheme.secondary,
+          elevation: 4.0,
           foregroundColor: colorScheme.onSecondary,
           child: const Icon(Icons.auto_awesome),
         ),
@@ -849,7 +870,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-// The "ask AI" button that appears below search
   Widget _buildAiSearchSuggestion(
       ColorScheme colorScheme, TextTheme textTheme, AppStrings appStrings) {
     return AnimatedSwitcher(
@@ -2235,7 +2255,6 @@ class _HomeScreenState extends State<HomeScreen>
 //      Refactored Cards (Now with Localization Support & Enhanced UI)
 // ============================================================
 
-// --- UltimateGridWorkerCard ---
 class UltimateGridWorkerCard extends StatelessWidget {
   final Worker worker;
   final VoidCallback onTap;
@@ -2252,18 +2271,23 @@ class UltimateGridWorkerCard extends StatelessWidget {
     String pl = p.toLowerCase();
     if (pl.contains('plumb')) return Icons.water_drop_outlined;
     if (pl.contains('electric')) return Icons.flash_on_outlined;
-    if (pl.contains('carpenter') || pl.contains('wood'))
+    if (pl.contains('carpenter') || pl.contains('wood')) {
       return Icons.workspaces_rounded;
+    }
     if (pl.contains('paint')) return Icons.format_paint_outlined;
     if (pl.contains('clean')) return Icons.cleaning_services_outlined;
-    if (pl.contains('garden') || pl.contains('landscap'))
+    if (pl.contains('garden') || pl.contains('landscap')) {
       return Icons.grass_outlined;
-    if (pl.contains('handyman') || pl.contains('fix'))
+    }
+    if (pl.contains('handyman') || pl.contains('fix')) {
       return Icons.build_circle_outlined;
-    if (pl.contains('tech') || pl.contains('comput'))
+    }
+    if (pl.contains('tech') || pl.contains('comput')) {
       return Icons.computer_outlined;
-    if (pl.contains('tutor') || pl.contains('teach'))
+    }
+    if (pl.contains('tutor') || pl.contains('teach')) {
       return Icons.school_outlined;
+    }
     return Icons.engineering_outlined;
   }
 
@@ -2276,7 +2300,8 @@ class UltimateGridWorkerCard extends StatelessWidget {
     double r = worker.rating ?? 0.0;
     Color rC = r >= 3.5 ? cs.secondary : cs.onSurface.withOpacity(0.6);
     Color aC = cs.secondary;
-    final appStrings = AppLocalizations.of(context)!;
+    final appStrings =
+        AppLocalizations.of(context)!; // This correctly returns AppStrings
 
     String? displayImageUrl = worker.profileImage;
 
@@ -2308,7 +2333,6 @@ class UltimateGridWorkerCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Image Header Section
                   Stack(
                     children: [
                       Hero(
@@ -2318,8 +2342,7 @@ class UltimateGridWorkerCard extends StatelessWidget {
                             top: Radius.circular(24.0),
                           ),
                           child: AspectRatio(
-                            aspectRatio:
-                                16 / 9, // Adjust aspect ratio as needed
+                            aspectRatio: 16 / 9,
                             child: CachedNetworkImage(
                               imageUrl: displayImageUrl ?? '',
                               fit: BoxFit.cover,
@@ -2344,7 +2367,6 @@ class UltimateGridWorkerCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Gradient overlay for text readability on image
                       Positioned.fill(
                         child: DecoratedBox(
                           decoration: BoxDecoration(
@@ -2364,7 +2386,6 @@ class UltimateGridWorkerCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Worker Name and Rating overlayed on the image
                       Positioned(
                         bottom: 12,
                         left: 16,
@@ -2375,7 +2396,6 @@ class UltimateGridWorkerCard extends StatelessWidget {
                             Text(
                               worker.name ?? appStrings.workerDetailAnonymous,
                               style: GoogleFonts.poppins(
-                                // Using GoogleFonts for title
                                 color: Colors.white,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -2424,7 +2444,6 @@ class UltimateGridWorkerCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // Details Section below the image
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -2432,9 +2451,9 @@ class UltimateGridWorkerCard extends StatelessWidget {
                       children: [
                         _buildProfessionAndPrice(
                             context, theme, cs, tt, appStrings),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
                         _buildStatsWrap(context, theme, cs, tt, aC, appStrings),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         _buildActionButtons(
                             context, theme, cs, tt, aC, appStrings),
                       ],
@@ -2449,6 +2468,7 @@ class UltimateGridWorkerCard extends StatelessWidget {
     );
   }
 
+  // CORRECTED: Changed parameter type from AppLocalizations to AppStrings
   Widget _buildProfessionAndPrice(BuildContext context, ThemeData t,
       ColorScheme cs, TextTheme tt, AppStrings appStrings) {
     return Row(
@@ -2481,7 +2501,7 @@ class UltimateGridWorkerCard extends StatelessWidget {
         const SizedBox(width: 10),
         Container(
           decoration: BoxDecoration(
-            color: cs.tertiary.withOpacity(0.1), // Using tertiary for price
+            color: cs.tertiary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: cs.tertiary.withOpacity(0.6),
@@ -2511,6 +2531,7 @@ class UltimateGridWorkerCard extends StatelessWidget {
     );
   }
 
+  // CORRECTED: Changed parameter type from AppLocalizations to AppStrings
   Widget _buildStatsWrap(
     BuildContext context,
     ThemeData t,
@@ -2529,10 +2550,10 @@ class UltimateGridWorkerCard extends StatelessWidget {
           worker.location ?? appStrings.generalN_A,
           cs.onSurface.withOpacity(0.7),
         ),
-        if (worker.distance != null) // Only show distance if available
+        if (worker.distance != null)
           _buildStatItem(
             t,
-            Icons.social_distance_outlined, // Or Icons.near_me_outlined
+            Icons.social_distance_outlined,
             appStrings
                 .workerCardDistanceAway(worker.distance!.toStringAsFixed(1)),
             cs.onSurface.withOpacity(0.7),
@@ -2548,7 +2569,6 @@ class UltimateGridWorkerCard extends StatelessWidget {
         Icon(i, size: 14, color: c.withOpacity(0.9)),
         const SizedBox(width: 5),
         Flexible(
-          // Added Flexible to prevent overflow
           child: Text(
             txt,
             style: t.textTheme.bodySmall?.copyWith(
@@ -2564,6 +2584,7 @@ class UltimateGridWorkerCard extends StatelessWidget {
     );
   }
 
+  // CORRECTED: Changed parameter type from AppLocalizations to AppStrings
   Widget _buildActionButtons(
     BuildContext context,
     ThemeData t,
@@ -2581,19 +2602,18 @@ class UltimateGridWorkerCard extends StatelessWidget {
           label: Text(appStrings.workerCardHire),
           onPressed: onBookNow,
           style: t.elevatedButtonTheme.style?.copyWith(
-            backgroundColor: WidgetStateProperty.all(aC),
-            foregroundColor: WidgetStateProperty.all(oAC),
-            textStyle: WidgetStateProperty.all(
+            backgroundColor: MaterialStateProperty.all(aC),
+            foregroundColor: MaterialStateProperty.all(oAC),
+            textStyle: MaterialStateProperty.all(
               tt.labelLarge?.copyWith(
                   fontSize: 13.5,
                   color: oAC,
-                  fontFamily:
-                      GoogleFonts.poppins().fontFamily), // Use GoogleFonts
+                  fontFamily: GoogleFonts.poppins().fontFamily),
             ),
-            padding: WidgetStateProperty.all(
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: MaterialStateProperty.all(
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             ),
-            shape: WidgetStateProperty.all(
+            shape: MaterialStateProperty.all(
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -2990,100 +3010,105 @@ class FeaturedWorkerCard extends StatelessWidget {
                 ),
               ),
               // Details Section below the image
+
               Expanded(
                 flex: 2, // Give less flex to details, making image bigger
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(_getProfessionIcon(worker.profession),
-                                    size: 15, color: cs.secondary),
-                                const SizedBox(width: 5),
-                                Flexible(
-                                  child: Text(
-                                    worker.profession ?? appStrings.generalN_A,
-                                    style: tt.bodySmall?.copyWith(
-                                        color: cs.onSurface.withOpacity(0.7)),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: rC.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.star_rate_rounded,
-                                    color: rTC, size: 13),
-                                Text(r.toStringAsFixed(1),
-                                    style: tt.labelSmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: rTC)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      // Price Range
-                      Container(
-                        decoration: BoxDecoration(
-                          color: cs.tertiary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: cs.tertiary.withOpacity(0.6),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                  padding: const EdgeInsets.all(10),
+                  child: SingleChildScrollView(
+                    physics:
+                        const AlwaysScrollableScrollPhysics(), // Ensure scroll physics for RefreshIndicator
+                    padding: const EdgeInsets.all(0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(Icons.attach_money,
-                                size: 14, color: cs.tertiary),
-                            const SizedBox(width: 4),
                             Flexible(
-                              child: Text(
-                                '${worker.priceRange ?? appStrings.workermoneyempty} birr',
-                                style: tt.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(_getProfessionIcon(worker.profession),
+                                      size: 15, color: cs.secondary),
+                                  Flexible(
+                                    child: Text(
+                                      worker.profession ??
+                                          appStrings.generalN_A,
+                                      style: tt.bodySmall?.copyWith(
+                                          color: cs.onSurface.withOpacity(0.7)),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: rC.withOpacity(0.8),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.star_rate_rounded,
+                                      color: rTC, size: 13),
+                                  Text(r.toStringAsFixed(1),
+                                      style: tt.labelSmall?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: rTC)),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      ),
-                      if (worker.distance !=
-                          null) // Only show distance if available
-                        _buildMetaItem(
-                          theme,
-                          Icons
-                              .social_distance_outlined, // Or Icons.near_me_outlined
-                          appStrings.workerCardDistanceAway(
-                              worker.distance!.toStringAsFixed(1)),
-                          cs.onSurface.withOpacity(0.7),
+
+                        // Price Range
+                        Container(
+                          decoration: BoxDecoration(
+                            color: cs.tertiary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: cs.tertiary.withOpacity(0.6),
+                            ),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.attach_money,
+                                  size: 14, color: cs.tertiary),
+                              Flexible(
+                                child: Text(
+                                  '${worker.priceRange ?? appStrings.workermoneyempty} birr',
+                                  style: tt.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                    ],
+                        if (worker.distance !=
+                            null) // Only show distance if available
+                          _buildMetaItem(
+                            theme,
+                            Icons
+                                .social_distance_outlined, // Or Icons.near_me_outlined
+                            appStrings.workerCardDistanceAway(
+                                worker.distance!.toStringAsFixed(1)),
+                            cs.onSurface.withOpacity(0.7),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -3094,13 +3119,12 @@ class FeaturedWorkerCard extends StatelessWidget {
     );
   }
 
-  // Helper specific to featured card meta items (reused from UltimateGridWorkerCard, adjusted for smaller context)
   Widget _buildMetaItem(ThemeData t, IconData i, String txt, Color c) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(i, size: 13, color: c.withOpacity(0.9)), // Slightly smaller icon
-        const SizedBox(width: 5),
+
         Flexible(
           child: Text(
             txt,
@@ -3218,7 +3242,6 @@ class FeaturedJobCard extends StatelessWidget {
                       ),
                     ),
                     if (hasImage) ...[
-                      const SizedBox(width: 10),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: CachedNetworkImage(
@@ -3242,7 +3265,6 @@ class FeaturedJobCard extends StatelessWidget {
                     ]
                   ],
                 ),
-                const SizedBox(height: 6),
                 Text(
                   job.description ?? appStrings.jobNoDescription,
                   style: tt.bodySmall
@@ -3262,7 +3284,6 @@ class FeaturedJobCard extends StatelessWidget {
                             job.location ?? appStrings.generalN_A)),
                   ],
                 ),
-                const SizedBox(height: 4),
                 _buildMetaItemFeatured(context, Icons.access_time, timeAgo),
               ],
             ),

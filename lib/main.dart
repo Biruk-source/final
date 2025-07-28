@@ -17,7 +17,7 @@ import 'screens/jobs/job_dashboard_screen.dart';
 import 'screens/professional_setup_edit.dart';
 import 'services/auth_service.dart';
 import 'services/app_string.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+
 import 'theme/light_colors.dart';
 
 import 'providers/theme_provider.dart';
@@ -33,13 +33,11 @@ void main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpdHZwdWJjcHFqc3lwcW1uZmVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2MzQwNzAsImV4cCI6MjA2MDIxMDA3MH0.92WtPxdEFtVXn2PRUZKineYg13BY0FH8fLtyIqtAAaE', // YOUR ANON KEY
   );
-
-  // --- Telebirr Configuration ---
   TelebirrPayment.instance.configure(
-    // --- Add your Telebirr details here ---
-    publicKey: '...',
-    appId: '...',
-    appKey: '...',
+    publicKey:
+        'MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC/ZcoOng1sJZ4CegopQVCw3HYqqVRLEudgT+dDpS8fRVy7zBgqZunju2VRCQuHeWs7yWgc9QGd4/8kRSLY+jlvKNeZ60yWcqEY+eKyQMmcjOz2Sn41fcVNgF+HV3DGiV4b23B6BCMjnpEFIb9d99/TsjsFSc7gCPgfl2yWDxE/Y1B2tVE6op2qd63YsMVFQGdre/CQYvFJENpQaBLMq4hHyBDgluUXlF0uA1X7UM0ZjbFC6ZIB/Hn1+pl5Ua8dKYrkVaecolmJT/s7c/+/1JeN+ja8luBoONsoODt2mTeVJHLF9Y3oh5rI+IY8HukIZJ1U6O7/JcjH3aRJTZagXUS9AgMBAAECggEBALBIBx8JcWFfEDZFwuAWeUQ7+VX3mVx/770kOuNx24HYt718D/HV0avfKETHqOfA7AQnz42EF1Yd7Rux1ZO0e3unSVRJhMO4linT1XjJ9ScMISAColWQHk3wY4va/FLPqG7N4L1w3BBtdjIc0A2zRGLNcFDBlxl/CVDHfcqD3CXdLukm/friX6TvnrbTyfAFicYgu0+UtDvfxTL3pRL3u3WTkDvnFK5YXhoazLctNOFrNiiIpCW6dJ7WRYRXuXhz7C0rENHyBtJ0zura1WD5oDbRZ8ON4v1KV4QofWiTFXJpbDgZdEeJJmFmt5HIi+Ny3P5n31WwZpRMHGeHrV23//0CgYEA+2/gYjYWOW3JgMDLX7r8fGPTo1ljkOUHuH98H/a/lE3wnnKKx+2ngRNZX4RfvNG4LLeWTz9plxR2RAqqOTbX8fj/NA/sS4mru9zvzMY1925FcX3WsWKBgKlLryl0vPScq4ejMLSCmypGz4VgLMYZqT4NYIkU2Lo1G1MiDoLy0CcCgYEAwt77exynUhM7AlyjhAA2wSINXLKsdFFF1u976x9kVhOfmbAutfMJPEQWb2WXaOJQMvMpgg2rU5aVsyEcuHsRH/2zatrxrGqLqgxaiqPz4ELINIh1iYK/hdRpr1vATHoebOv1wt8/9qxITNKtQTgQbqYci3KV1lPsOrBAB5S57nsCgYAvw+cagS/jpQmcngOEoh8I+mXgKEET64517DIGWHe4kr3dO+FFbc5eZPCbhqgxVJ3qUM4LK/7BJq/46RXBXLvVSfohR80Z5INtYuFjQ1xJLveeQcuhUxdK+95W3kdBBi8lHtVPkVsmYvekwK+ukcuaLSGZbzE4otcn47kajKHYDQKBgDbQyIbJ+ZsRw8CXVHu2H7DWJlIUBIS3s+CQ/xeVfgDkhjmSIKGX2to0AOeW+S9MseiTE/L8a1wY+MUppE2UeK26DLUbH24zjlPoI7PqCJjl0DFOzVlACSXZKV1lfsNEeriC61/EstZtgezyOkAlSCIH4fGr6tAeTU349Bnt0RtvAoGBAObgxjeH6JGpdLz1BbMj8xUHuYQkbxNeIPhH29CySn0vfhwg9VxAtIoOhvZeCfnsCRTj9OZjepCeUqDiDSoFznglrKhfeKUndHjvg+9kiae92iI6qJudPCHMNwP8wMSphkxUqnXFR3lr9A765GA980818UWZdrhrjLKtIIZdh+X1',
+    appId: 'c4182ef8-9249-458a-985e-06d191f4d505',
+    appKey: 'fad0f06383c6297f545876694b974599',
     notifyUrl: '...',
     shortCode: '...',
     merchantDisplayName: 'fixit95',
@@ -58,9 +56,6 @@ void main() async {
   );
 }
 
-// ============================================================
-//                 MY APP WIDGET (Root)
-// ============================================================
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -73,23 +68,22 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'FixIt', // Can be localized later
 
-      // --- ** Localization Setup - THIS MUST BE HERE ** ---
       localizationsDelegates: const [
-        AppLocalizations.delegate, // Your custom app strings delegate
-        GlobalMaterialLocalizations.delegate, // ** For Material Components **
-        GlobalWidgetsLocalizations.delegate, // ** For Text Direction, etc. **
-        GlobalCupertinoLocalizations.delegate, // ** For Cupertino Components **
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
         Locale('en', ''), // English
         Locale('am', ''), // Amharic
         Locale('om', ''), // Oromo
       ],
-      locale: localeProvider.locale, // Use the locale from your provider
+      locale: localeProvider.locale,
       // ----------------------------------------------------
 
       // --- Theme Setup ---
-      theme: AppThemes.lightTheme, // Use theme from AppThemes
+      theme: AppThemes.lightTheme,
       darkTheme: AppThemes.darkTheme,
       themeMode: themeProvider.themeMode,
       // -----------------
@@ -133,7 +127,7 @@ class AuthWrapper extends StatelessWidget {
           );
         }
         if (snapshot.hasError) {
-          print('Error in AuthWrapper FutureBuilder: ${snapshot.error}');
+          print('Error in AuthWrapp FutureBuilder: ${snapshot.error}');
           // Consider showing a generic error screen
           return const LoginScreen();
         }
@@ -413,7 +407,7 @@ class _MainScreenState extends State<MainScreen> {
     if (_screens.isEmpty || _navItems.isEmpty || _screenTitles.isEmpty) {
       print(
           "MainScreen: Re-initializing UI in build (maybe strings became ready).");
-      _initializeScreensAndNavItems(); // Try again now that appStrings is not null
+      _initializeScreensAndNavItems();
       if (_screens.isEmpty || _navItems.isEmpty || _screenTitles.isEmpty) {
         print(
             "MainScreen Build ERROR: Screen lists STILL empty. Critical error.");

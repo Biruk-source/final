@@ -36,6 +36,33 @@ abstract class AppStrings {
   Map<String, List<String>> get jobCategoriesAndSkills;
   String get errorInitializationFailed;
   String get errorCouldNotSavePrefs;
+  // Inside your abstract class AppStrings { ... }
+
+  String get viewButton;
+  String get carouselViewTooltip;
+  String get gridViewTooltip;
+  String get distanceLabel;
+  String get locationTitle;
+  String get mapNotAvailable;
+  String get mapErrorConnectivity;
+  String get estimatedEtaLabel;
+  String get viewOnMapButton;
+  String get snackbarFailedToLaunchMap;
+  String availableSlotsForDate(String date); // This is a method, not a getter
+  String get noSlotsAvailable;
+  String get bookSlotButton;
+  String get selectTimeSlotButton;
+  String get noInternetConnection;
+  String get locationPermissionDenied;
+  String get errorFetchingLocation;
+  String get couldNotLoadVideo;
+  String get videoLoadFailed;
+  String get cannotPlayVideoNoInternet;
+  String get reviewJobPaymentPrerequisite;
+  String get performanceOverviewTitle;
+  String get failedToMakeCall;
+  String
+      get submitReviewButton; // Ensure this is also present if missing from your abstract
   String get errorConnectivityCheck;
   String get errorActionFailed;
   String get errorCouldNotLaunchUrl;
@@ -2125,6 +2152,57 @@ class AppStringsEn implements AppStrings {
   String get jobStatusStartedWorking => "Started Working";
   @override
   String get myWorkDashboard => "My Work Dashboard";
+  // Inside your class AppStringsEn implements AppStrings { ... }
+
+  @override
+  String get viewButton => "View";
+  @override
+  String get carouselViewTooltip => "Carousel View";
+  @override
+  String get gridViewTooltip => "Grid View";
+  @override
+  String get distanceLabel => "Distance";
+  @override
+  String get locationTitle => "Location";
+  @override
+  String get mapNotAvailable => "Map not available";
+  @override
+  String get mapErrorConnectivity => "Check internet or API key";
+  @override
+  String get estimatedEtaLabel => "Estimated ETA";
+  @override
+  String get viewOnMapButton => "View on Map";
+  @override
+  String get snackbarFailedToLaunchMap => "Failed to launch map";
+  @override
+  String availableSlotsForDate(String date) => "Available Slots for $date";
+  @override
+  String get noSlotsAvailable => "No slots available";
+  @override
+  String get bookSlotButton => "Book Slot";
+  @override
+  String get selectTimeSlotButton => "Select a Time Slot";
+  @override
+  String get noInternetConnection => "No internet connection.";
+  @override
+  String get locationPermissionDenied => "Location permission denied.";
+  @override
+  String get errorFetchingLocation => "Error fetching location.";
+  @override
+  String get couldNotLoadVideo => "Could not load video.";
+  @override
+  String get videoLoadFailed => "Video load failed.";
+  @override
+  String get cannotPlayVideoNoInternet => "Cannot play video without internet.";
+  @override
+  String get reviewJobPaymentPrerequisite =>
+      "You need to complete at least one\njob and one payment to submit a review.";
+  @override
+  String get performanceOverviewTitle => "Performance Overview";
+  @override
+  String get failedToMakeCall => "Failed to make call.";
+  @override
+  String get submitReviewButton => "Submit Review"; // Ensure this is present
   @override
   String get myJobsDashboard => "My Jobs Dashboard";
   @override
@@ -2674,9 +2752,9 @@ class AppStringsAm implements AppStrings {
       'የሰራተኛውን ዝርዝር በመጫን ላይ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።';
   @override
   String get createJobSnackbarErrorUpload =>
-      'አባሪዎችን በመጫን ላይ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።';
+      'ሰነዶችን በመጫን ላይ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።';
   @override
-  String get createJobSnackbarErrorUploadPartial => 'አንዳንድ አባሪዎች መጫን አልተሳካም።';
+  String get createJobSnackbarErrorUploadPartial => 'አንዳንድ ሰነዶች መጫን አልተሳካም።';
   @override
   String get createJobSnackbarErrorForm => 'እባክዎ በፎርሙ ላይ ያሉትን ስህተቶች ያስተካክሉ።';
   @override
@@ -2895,9 +2973,60 @@ class AppStringsAm implements AppStrings {
   @override
   String get createJobScheduleSub => 'የሚመርጡትን ቀን ለመምረጥ ይንኩ';
   @override
-  String get createJobAttachmentsLabelOptional => 'አባሪዎች (አማራጭ)';
+  String get createJobAttachmentsLabelOptional => 'ሰነዶች (አማራጭ)';
   @override
   String get createJobAttachmentsSubAdd => 'ፎቶዎችን ወይም ሰነዶችን ለማከል ይንኩ';
+  // Inside your class AppStringsAm implements AppStrings { ... }
+
+  @override
+  String get viewButton => "ይመልከቱ";
+  @override
+  String get carouselViewTooltip => "ካሮሰል እይታ";
+  @override
+  String get gridViewTooltip => "ፍርግርግ እይታ";
+  @override
+  String get distanceLabel => "ርቀት";
+  @override
+  String get locationTitle => "ቦታ";
+  @override
+  String get mapNotAvailable => "ካርታ የለም";
+  @override
+  String get mapErrorConnectivity => "ኢንተርኔት ወይም API ቁልፍ ያረጋግጡ";
+  @override
+  String get estimatedEtaLabel => "ግምታዊ የመድረሻ ጊዜ";
+  @override
+  String get viewOnMapButton => "ካርታ ላይ ይመልከቱ";
+  @override
+  String get snackbarFailedToLaunchMap => "ካርታ ለመክፈት አልተቻለም";
+  @override
+  String availableSlotsForDate(String date) => "የሚገኙ ክፍተቶች ለ $date";
+  @override
+  String get noSlotsAvailable => "ምንም የጊዜ ክፍተት የለም";
+  @override
+  String get bookSlotButton => "የጊዜ ክፍተት ያስይዙ";
+  @override
+  String get selectTimeSlotButton => "የጊዜ ክፍተት ይምረጡ";
+  @override
+  String get noInternetConnection => "የበይነመረብ ግንኙነት የለም።";
+  @override
+  String get locationPermissionDenied => "የቦታ ፈቃድ ተከልክሏል።";
+  @override
+  String get errorFetchingLocation => "ቦታ ሲመዘግብ ስህተት ተፈጠረ።";
+  @override
+  String get couldNotLoadVideo => "ቪዲዮውን መጫን አልተቻለም።";
+  @override
+  String get videoLoadFailed => "ቪዲዮ መጫን አልተሳካም።";
+  @override
+  String get cannotPlayVideoNoInternet => "ያለ ኢንተርኔት ቪዲዮ ማጫወት አይቻልም።";
+  @override
+  String get reviewJobPaymentPrerequisite =>
+      "ግምገማ ለማስገባት ቢያንስ አንድ ስራ እና አንድ ክፍያ ማጠናቀቅ አለብዎት።";
+  @override
+  String get performanceOverviewTitle => "የአፈጻጸም አጠቃላይ እይታ";
+  @override
+  String get failedToMakeCall => "ጥሪ ለማድረግ አልተቻለም።";
+  @override
+  String get submitReviewButton => "ግምገማ አስገባ"; // Ensure this is present
   @override
   String createJobAttachmentsSubCount(int count) => '$count ፋይል(ሎች) ተያይዘዋል።';
   @override
